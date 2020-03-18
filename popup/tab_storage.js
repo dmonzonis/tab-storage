@@ -58,11 +58,10 @@ function saveSession() {
         }
         getOpenTabs().then((openTabs) => {
             // TODO: Save only 'real' tabs, i.e. no empty tabs
-            // TODO: Store urls instead of the whole tab object
             // TODO: Check for privileged and semi-privileged pages (like about: pages) and don't store
             // those as they cannot be opened programmatically
             browser.storage.sync.set({
-                [sessionName]: openTabs
+                [sessionName]: openTabs.map(tab => tab.url)
             });
             addItem(sessionName);
         });
@@ -76,10 +75,10 @@ function loadSession(sessionName) {
         if (isEmpty(result)) {
             console.log('The session ${sessionName} does not exist in the storage');
         }
-        tabArray = Object.values(result)[0];
-        for (let tab of tabArray) {
+        urls = Object.values(result)[0];
+        for (let url of urls) {
             browser.tabs.create({
-                url: tab.url
+                url: url
             });
         }
     }, onError);
@@ -90,7 +89,7 @@ function loadSession(sessionName) {
  */
 function renderSessionList() {
     // Remove any existing elements in the list before populating
-    sessionList.innerHTML = ""
+    sessionList.innerHTML = "";
     // Populate using all session keys in the storage
     browser.storage.sync.get().then((result) => {
         let sessionKeys = Object.keys(result);
