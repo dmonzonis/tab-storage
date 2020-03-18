@@ -1,0 +1,20 @@
+{
+    "manifest_version": 2,
+    "name": "Tab Storage",
+    "version": "1.0",
+    "description": "Allows saving and restoring groups of open tabs",
+    "homepage_url": "https://github.com/dmonzonis/tab-storage",
+    "permissions": [
+        "tabs",
+        "storage"
+    ],
+    "browser_action": {
+        "default_title": "Tab Storage",
+        "default_popup": "popup/tab_storage.html"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "tab-storage@dmonzonis.com"
+        }
+    }
+}
