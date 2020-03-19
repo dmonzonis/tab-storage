@@ -16,17 +16,6 @@ function getOpenTabs() {
     });
 }
 
-/** 
- * Append a new element to the session-list with text given by str
- * 
- * @param {String} str String that will be displayed for the new element in the lest
- */
-function addItem(str) {
-    var li = document.createElement('li');
-    li.appendChild(document.createTextNode(str));
-    sessionList.appendChild(li);
-}
-
 /**
  * Returns whether the object is empty.
  * 
@@ -95,17 +84,42 @@ function loadSession(sessionName) {
  * Renders the stored sessions by session name in the popup's selection box.
  */
 function renderSessionList() {
-    // Remove any existing elements in the list before populating
-    sessionList.innerHTML = "";
     // Populate using all session keys in the storage
     browser.storage.sync.get().then((result) => {
         let sessionKeys = Object.keys(result);
+        let frag = document.createDocumentFragment();
+        // Remove any existing elements in the list before populating
         for (let sessionKey of sessionKeys) {
-            addItem(sessionKey);
+            let li = frag.appendChild(document.createElement('li'));
+            li.textContent = sessionKey;
         }
+        // Set the rendered session list to the newly populated one
+        sessionList.innerHTML = "";
+        sessionList.appendChild(frag);
     }, onError);
     // Set load/delete button enabled status depending on whether there is a selected item
     setButtonsEnabled(Boolean(document.querySelector('li.selected')));
+}
+
+/**
+ * Allows the selection of list elements in the session list,
+ * setting the selected's element class to "selected".
+ *
+ * Only one selection is allowed, so once an element is selected, the selected
+ * class is cleared from other elements if it existed.
+ */
+function onClickSessionList(ev) {
+    if (ev.target.tagName === 'LI') {
+        let selected = document.querySelector('li.selected');
+        if (selected) {
+            selected.className = '';
+        }
+        ev.target.className = 'selected';
+        // Enable the Load/Delete buttons in case it was disabled due to no session being selected
+        setButtonsEnabled(true);
+    }
+    // TODO: Deselect on click away
+    // TODO: Load on double click?
 }
 
 saveBtn.onclick = function () {
@@ -134,23 +148,4 @@ deleteBtn.onclick = function () {
     }
 };
 
-/**
- * Allows the selection of list elements in the session-list list,
- * setting the selected's element class to selected.
- * 
- * Only one selection is allowed, so once an element is selected, the selected
- * class is cleared from other elements if it existed.
- */
-sessionList.onclick = function (e) {
-    if (e.target.tagName === 'LI') {
-        let selected = document.querySelector('li.selected');
-        if (selected) {
-            selected.className = '';
-        }
-        e.target.className = 'selected';
-        // Enable the Load/Delete buttons in case it was disabled due to no session being selected
-        setButtonsEnabled(true);
-    }
-    // TODO: Deselect on click away
-    // TODO: Load on double click?
-};
+sessionList.onclick = onClickSessionList;
