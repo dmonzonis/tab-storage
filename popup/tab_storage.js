@@ -44,29 +44,19 @@ function onError(error) {
  * Prompt the user for a session name, save the currently open tabs to that session and add
  * the session to the session list in the popup.
  */
-function saveSession() {
-    let sessionName = prompt("Give a unique name for the session:");
-    if (!sessionName) {
-        console.log('No session name provided');
-        return;
-    }
-    // If the given session name already exists, don't do anything
-    browser.storage.sync.get(sessionName).then((result) => {
-        if (!isEmpty(result)) {
-            alert("A session with that name already exists!");
-            return;
-        }
-        getOpenTabs().then((openTabs) => {
-            // TODO: Save only 'real' tabs, i.e. no empty tabs
-            // TODO: Check for privileged and semi-privileged pages (like about: pages) and don't store
-            // those as they cannot be opened programmatically
-            browser.storage.sync.set({
-                [sessionName]: openTabs.map(tab => tab.url)
-            });
-            addItem(sessionName);
+function saveSession(sessionName) {
+    getOpenTabs().then((openTabs) => {
+        // TODO: Save only 'real' tabs, i.e. no empty tabs
+        // TODO: Check for privileged and semi-privileged pages (like about: pages) and don't store
+        // those as they cannot be opened programmatically
+
+        // If a session with the same name existed before, it will be overwritten
+        browser.storage.sync.set({
+            [sessionName]: openTabs.map(tab => tab.url)
+        }).then(() => {
+            renderSessionList();
         });
-    }, onError);
-    // Save open tabs as a new session into the sync storage and add a new item in the session list
+    });
 }
 
 function loadSession(sessionName) {
@@ -100,7 +90,14 @@ function renderSessionList() {
 }
 
 saveBtn.onclick = function () {
-    saveSession();
+    let selected = document.querySelector('li.selected');
+    let defaultText = selected ? selected.textContent : "";
+    let sessionName = prompt("Give a unique name for the session:", defaultText);
+    if (!sessionName) {
+        console.log('No session name provided');
+        return;
+    }
+    saveSession(sessionName);
 };
 
 loadBtn.onclick = function () {
