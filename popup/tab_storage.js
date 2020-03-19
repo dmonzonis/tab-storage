@@ -41,6 +41,23 @@ function onError(error) {
 }
 
 /**
+ * Returns the text content of the selected session name, or an empty string if there
+ * is no session selected.
+ */
+function getSelectedText() {
+    let selected = document.querySelector('li.selected');
+    return selected ? selected.textContent : "";
+}
+
+/**
+ * Sets the Load and Delete buttons to the corresponding state depending on the flag.
+ * @param {Boolean} flag true enables the buttons, false disables them.
+ */
+function setButtonsEnabled(flag) {
+    loadBtn.disabled = deleteBtn.disabled = !flag;
+}
+
+/**
  * Prompt the user for a session name, save the currently open tabs to that session and add
  * the session to the session list in the popup.
  */
@@ -87,12 +104,12 @@ function renderSessionList() {
             addItem(sessionKey);
         }
     }, onError);
+    // Set load/delete button enabled status depending on whether there is a selected item
+    setButtonsEnabled(Boolean(document.querySelector('li.selected')));
 }
 
 saveBtn.onclick = function () {
-    let selected = document.querySelector('li.selected');
-    let defaultText = selected ? selected.textContent : "";
-    let sessionName = prompt("Give a unique name for the session:", defaultText);
+    let sessionName = prompt("Give a unique name for the session:", getSelectedText());
     if (!sessionName) {
         console.log('No session name provided');
         return;
@@ -101,17 +118,15 @@ saveBtn.onclick = function () {
 };
 
 loadBtn.onclick = function () {
-    let selected = document.querySelector('li.selected');
-    if (selected) {
-        let sessionName = selected.textContent;
+    let sessionName = getSelectedText();
+    if (sessionName) {
         loadSession(sessionName);
     }
 };
 
 deleteBtn.onclick = function () {
-    let selected = document.querySelector('li.selected');
-    if (selected) {
-        let sessionName = selected.textContent;
+    let sessionName = getSelectedText();
+    if (sessionName) {
         browser.storage.sync.remove(sessionName).then(() => {
             // Re-render the session list without the deleted session
             renderSessionList();
@@ -134,8 +149,7 @@ sessionList.onclick = function (e) {
         }
         e.target.className = 'selected';
         // Enable the Load/Delete buttons in case it was disabled due to no session being selected
-        loadBtn.disabled = false;
-        deleteBtn.disabled = false;
+        setButtonsEnabled(true);
     }
     // TODO: Deselect on click away
     // TODO: Load on double click?
