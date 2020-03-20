@@ -2,9 +2,22 @@ var saveBtn = document.querySelector('#save-btn');
 var loadBtn = document.querySelector('#load-btn');
 var deleteBtn = document.querySelector('#delete-btn');
 var sessionList = document.querySelector('#session-list');
+var closeTabsOnLoadCheckbox = document.querySelector('#close-tabs-on-load');
 
-// Initial render
-renderSessionList();
+// Hardcoded keys for persistent settings
+const CLOSE_TABS_ON_LOAD_SETTING = 'close_tabs_on_load';
+
+init();
+
+/**
+ * Initialize the components in the view.
+ */
+function init() {
+    renderSessionList();
+    browser.storage.local.get(CLOSE_TABS_ON_LOAD_SETTING).then((result) => {
+        closeTabsOnLoadCheckbox.checked = !isEmpty(result) && Object.values(result)[0];
+    }, onError);
+}
 
 /**
  * Return a promise that will contain all the currently open tabs in the active window when fulfilled.
@@ -66,15 +79,21 @@ function saveSession(sessionName) {
 }
 
 function loadSession(sessionName) {
-    // TODO: Let users choose if they want to close currently open tabs before restoring ression
+    let openTabsPromise = getOpenTabs();
     browser.storage.sync.get(sessionName).then((result) => {
         if (isEmpty(result)) {
-            console.log('The session ${sessionName} does not exist in the storage');
+            console.warn('The session ${sessionName} does not exist in the storage');
         }
         urls = Object.values(result)[0];
         for (let url of urls) {
             browser.tabs.create({
                 url: url
+            });
+        }
+        // Close the previously open tabs if necessary
+        if (closeTabsOnLoadCheckbox.checked) {
+            openTabsPromise.then((openTabs) => {
+                browser.tabs.remove(openTabs.map(tab => tab.id));
             });
         }
     }, onError);
@@ -144,8 +163,15 @@ deleteBtn.onclick = function () {
         browser.storage.sync.remove(sessionName).then(() => {
             // Re-render the session list without the deleted session
             renderSessionList();
-        });
+        }, onError);
     }
+};
+
+closeTabsOnLoadCheckbox.onchange = function () {
+    // Make new value persist
+    browser.storage.local.set({
+        [CLOSE_TABS_ON_LOAD_SETTING]: closeTabsOnLoadCheckbox.checked
+    });
 };
 
 sessionList.onclick = onClickSessionList;
