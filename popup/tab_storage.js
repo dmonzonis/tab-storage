@@ -127,18 +127,18 @@ function renderSessionList() {
  * Only one selection is allowed, so once an element is selected, the selected
  * class is cleared from other elements if it existed.
  */
-function onClickSessionList(ev) {
-    if (ev.target.tagName === 'LI') {
-        let selected = document.querySelector('li.selected');
-        if (selected) {
-            selected.className = '';
-        }
-        ev.target.className = 'selected';
-        // Enable the Load/Delete buttons in case it was disabled due to no session being selected
-        setButtonsEnabled(true);
+function onClickSessionPanel(ev) {
+    // First, deselect the old selection. A new selection will be set only if the user clicked on an item.
+    let selected = document.querySelector('li.selected');
+    if (selected) {
+        selected.className = '';
     }
-    // TODO: Deselect on click away
-    // TODO: Load on double click?
+    if (ev.target.tagName === 'LI') {
+        ev.target.className = 'selected';
+        setButtonsEnabled(true);
+    } else {
+        setButtonsEnabled(false);
+    }
 }
 
 saveBtn.onclick = function () {
@@ -174,4 +174,4 @@ closeTabsOnLoadCheckbox.onchange = function () {
     });
 };
 
-sessionList.onclick = onClickSessionList;
+document.querySelector('#session-panel').onclick = onClickSessionPanel;
