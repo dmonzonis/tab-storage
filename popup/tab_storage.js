@@ -52,6 +52,16 @@ function getSelectedText() {
 }
 
 /**
+ * Clears the selection of sessions in the list, if there is any selected.
+ */
+function clearSelection() {
+    let selected = document.querySelector('li.selected');
+    if (selected) {
+        selected.className = '';
+    }
+}
+
+/**
  * Sets the Load and Delete buttons to the corresponding state depending on the flag.
  * @param {Boolean} flag true enables the buttons, false disables them.
  */
@@ -129,10 +139,7 @@ function renderSessionList() {
  */
 function onClickSessionPanel(ev) {
     // First, deselect the old selection. A new selection will be set only if the user clicked on an item.
-    let selected = document.querySelector('li.selected');
-    if (selected) {
-        selected.className = '';
-    }
+    clearSelection();
     if (ev.target.tagName === 'LI') {
         ev.target.className = 'selected';
         setButtonsEnabled(true);
@@ -162,6 +169,7 @@ deleteBtn.onclick = function () {
     if (sessionName) {
         browser.storage.sync.remove(sessionName).then(() => {
             // Re-render the session list without the deleted session
+            clearSelection();
             renderSessionList();
         }, onError);
     }
