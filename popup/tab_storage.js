@@ -90,11 +90,14 @@ function saveSession(sessionName) {
 
 function loadSession(sessionName) {
     let openTabsPromise = getOpenTabs();
-    browser.storage.sync.get(sessionName).then((result) => {
-        if (isEmpty(result)) {
+    let getSessionPromise = browser.storage.sync.get(sessionName);
+    Promise.all([openTabsPromise, getSessionPromise]).then((results) => {
+        let [openTabs, sessionTabs] = results;
+        if (isEmpty(sessionTabs)) {
             console.warn('The session ${sessionName} does not exist in the storage');
+            return;
         }
-        urls = Object.values(result)[0];
+        urls = Object.values(sessionTabs)[0];
         for (let url of urls) {
             browser.tabs.create({
                 url: url
@@ -102,10 +105,10 @@ function loadSession(sessionName) {
         }
         // Close the previously open tabs if necessary
         if (closeTabsOnLoadCheckbox.checked) {
-            openTabsPromise.then((openTabs) => {
-                browser.tabs.remove(openTabs.map(tab => tab.id));
-            });
+            browser.tabs.remove(openTabs.map(tab => tab.id));
         }
+        // Finally, close the popup window
+        window.close();
     }, onError);
 }
 
