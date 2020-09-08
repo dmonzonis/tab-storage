@@ -9,8 +9,8 @@
 <body>
     <div class="buttonbox">
         <button class="button" id="save-btn">Save</button>
-        <button class="button" id="load-btn" disabled>Load</button>
-        <button class="button" id="delete-btn" disabled>Delete</button>
+        <button class="button needselection" id="load-btn" disabled>Load</button>
+        <button class="button needselection" id="delete-btn" disabled>Delete</button>
     </div>
 
     <h4>Saved sessions</h4>
@@ -18,8 +18,9 @@
         <ul id="session-list">
         </ul>
     </div>
-    <div>
+    <div class="buttonbox">
         <input type="checkbox" id="close-tabs-on-load"><label for="close-tabs-on-load">Close tabs on load</label>
+        <button class="button needselection" id="export-btn" disabled>Export</button>
     </div>
     <script type="text/javascript" src="tab_storage.js"></script>
 </body>

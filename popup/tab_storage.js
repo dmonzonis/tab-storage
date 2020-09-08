@@ -1,11 +1,15 @@
 var saveBtn = document.querySelector('#save-btn');
 var loadBtn = document.querySelector('#load-btn');
 var deleteBtn = document.querySelector('#delete-btn');
+var exportBtn = document.querySelector('#export-btn');
 var sessionList = document.querySelector('#session-list');
 var closeTabsOnLoadCheckbox = document.querySelector('#close-tabs-on-load');
 
 // Hardcoded keys for persistent settings
 const CLOSE_TABS_ON_LOAD_SETTING = 'close_tabs_on_load';
+
+// Messages
+const SESSION_TABS_EMPTY = 'The session ${sessionName} does not exist in the storage';
 
 init();
 
@@ -62,11 +66,14 @@ function clearSelection() {
 }
 
 /**
- * Sets the Load and Delete buttons to the corresponding state depending on the flag.
+ * Enables or disables buttons that require to have a session selected.
  * @param {Boolean} flag true enables the buttons, false disables them.
  */
 function setButtonsEnabled(flag) {
-    loadBtn.disabled = deleteBtn.disabled = !flag;
+    let buttons = document.querySelectorAll('.needselection')
+    for (let button of buttons) {
+        button.disabled = !flag;
+    }
 }
 
 /**
@@ -94,7 +101,7 @@ function loadSession(sessionName) {
     Promise.all([openTabsPromise, getSessionPromise]).then((results) => {
         let [openTabs, sessionTabs] = results;
         if (isEmpty(sessionTabs)) {
-            console.warn('The session ${sessionName} does not exist in the storage');
+            console.warn(SESSION_TABS_EMPTY);
             return;
         }
         urls = Object.values(sessionTabs)[0];
@@ -109,6 +116,20 @@ function loadSession(sessionName) {
         }
         // Finally, close the popup window
         window.close();
+    }, onError);
+}
+
+function exportSession(sessionName) {
+    browser.storage.sync.get(sessionName).then((sessionTabs) => {
+        if (isEmpty(sessionTabs)) {
+            console.warn(SESSION_TABS_EMPTY);
+            return;
+        }
+        urls = Object.values(sessionTabs)[0];
+        const exportFile = new Blob([urls.join('\n')], { type: 'text/plain' });
+        const exportURL = URL.createObjectURL(exportFile);
+        const filename = sessionName.replace(' ', '_') + '_export.txt';
+        browser.downloads.download({ url: exportURL, filename: filename });
     }, onError);
 }
 
@@ -175,6 +196,13 @@ deleteBtn.onclick = function () {
             clearSelection();
             renderSessionList();
         }, onError);
+    }
+};
+
+exportBtn.onclick = function () {
+    let sessionName = getSelectedText();
+    if (sessionName) {
+        exportSession(sessionName);
     }
 };
 
